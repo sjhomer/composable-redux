@@ -37,6 +37,14 @@
   transition: all 0.15s;
 }
 
+.textbox {
+  font-size: 32px;
+  padding: 2px;
+  width: 64px;
+  text-align: center;
+  margin-right: 4px;
+}
+
 .button:hover,
 .button:focus {
   border: 2px solid rgba(112, 76, 182, 0.4);
