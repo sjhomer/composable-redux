@@ -2,7 +2,7 @@ import React from 'react'
 import styles from './TextInput.module.css'
 
 interface TextInputProps {
-  initialValue: number|string
+  initialValue?: number|string
   ariaLabel: string
 }
 
