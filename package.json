@@ -4,6 +4,7 @@
   "private": true,
   "workspaces": [
     "src/app",
+    "src/lib",
     "src/features"
   ],
   "dependencies": {

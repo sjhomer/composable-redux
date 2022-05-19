@@ -1,6 +1,7 @@
 import Counter from './Counter'
-import {counterSlice as slice} from './state'
-export * as type from './Counter.types'
+import state from './counterState'
+
+const { slice } = state
 
 export {
   slice
