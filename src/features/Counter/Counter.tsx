@@ -24,4 +24,4 @@ const Counter = (props: CounterProps) => {
   )
 }
 
-export default connect(state.mapStateToProps, state.mapActionToDispatches)(Counter) as ConnectedProps<any> as React.FC<CounterOwnProps>
+export default connect(state.mapStateToProps, state.mapDispatchToProps)(Counter) as ConnectedProps<any> as React.FC<CounterOwnProps>

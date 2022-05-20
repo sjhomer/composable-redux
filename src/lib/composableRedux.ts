@@ -3,7 +3,6 @@ import {createAsyncThunk, createSlice} from '@reduxjs/toolkit'
 import {AsyncThunk, AsyncThunkOptions, AsyncThunkPayloadCreator} from '@reduxjs/toolkit/src/createAsyncThunk'
 import {AppDispatch, RootState} from '@self/app/store'
 import {Reducer} from 'redux'
-import {CaseReducers} from '@reduxjs/toolkit/src/createReducer'
 import {MapDispatchToPropsNonObject, MapStateToPropsParam} from 'react-redux/es/connect/selectorFactory'
 
 export interface composableAsyncThunkActions {
@@ -29,6 +28,10 @@ export interface composableAsyncThunkList {
   [name: `${string}`]: composableAsyncThunk
 }
 
+export interface composableDispatchList {
+  [name: `${string}`]: Function
+}
+
 export enum composableAsyncThunkStatus {
   idle = 'idle',
   pending = 'pending',
@@ -52,15 +55,34 @@ export interface composableReduxReturn {
   reducer: Reducer
   actions: CaseReducerActions<any>
   thunks: composableAsyncThunkList
-  mapStateToProps: MapStateToPropsParam<any, any, any>
-  mapActionToDispatches: MapDispatchToPropsNonObject<any, any>
+  mapStateToProps: MapStateToPropsParam<RootState, Object, Object>
+  mapDispatchToProps: MapDispatchToPropsNonObject<any, any>
 }
+
+interface defaultMapDispatchToProps {
+  state: RootState
+  slice: Object
+  ownProps: Object
+}
+
+const defaultMapStateToProps = ({state, slice, ownProps}: defaultMapDispatchToProps) => {
+  return {
+    ...slice,
+    ...ownProps,
+  }
+}
+
+const slices = [] as Array<string>
 
 export default function composableRedux(props: composableReduxProps): composableReduxReturn {
   const sliceName = props?.slice?.name
   if (!sliceName || !props.slice?.initialState || !props.slice?.reducers) {
     throw new Error('`slice` is a required option for composableRedux')
   }
+  if(slices.includes(sliceName)) {
+    throw new Error(`slice ${sliceName} already exists! Please choose a different name.`)
+  }
+  slices.push(sliceName)
 
   // Ready helpers for thunk building
   const thunks = props.thunks || {}
@@ -78,11 +100,12 @@ export default function composableRedux(props: composableReduxProps): composable
 
   // Firstly, we need to create thunks. This will be needed to generate status checks in the extraReducers callback.
   forEachThunk((thunk: composableAsyncThunkFull, type: string) => {
+    const {actions: {load}, options} = thunk
     thunk.async = createAsyncThunk(
       `${sliceName}/${type}`,
       // @ts-ignore
-      thunk.actions.load,
-      thunk.options,
+      load,
+      options,
     )
   })
 
@@ -97,19 +120,20 @@ export default function composableRedux(props: composableReduxProps): composable
       props.slice?.extraReducers?.(builder)
 
       forEachThunk((thunk: composableAsyncThunkFull, type: string) => {
+        const {async: asyncThunk, actions: {onLoad, onSuccess, onError}} = thunk
         // Add cases for this thunk.
         builder
-          .addCase(thunk.async.pending, (state) => {
+          .addCase(asyncThunk.pending, (state) => {
             state._thunkStatus = composableAsyncThunkStatus.pending
-            thunk.actions?.onLoad?.(state)
+            onLoad?.(state)
           })
-          .addCase(thunk.async.fulfilled, (state, action) => {
+          .addCase(asyncThunk.fulfilled, (state, action) => {
             state._thunkStatus = composableAsyncThunkStatus.idle
-            thunk.actions.onSuccess?.(state, action)
+            onSuccess?.(state, action)
           })
-          .addCase(thunk.async.rejected, (state) => {
+          .addCase(asyncThunk.rejected, (state) => {
             state._thunkStatus = composableAsyncThunkStatus.failure
-            thunk.actions?.onError?.(state)
+            onError?.(state)
           })
       })
     },
@@ -118,14 +142,7 @@ export default function composableRedux(props: composableReduxProps): composable
   const getSlicedState = (state: RootState) => state[sliceName]
 
   // Assign default fallback if not provided.
-  if (!props.mapStateToProps) {
-    props.mapStateToProps = ({state, slice, ownProps}) => {
-      return {
-        ...slice,
-        ...ownProps,
-      }
-    }
-  }
+  const mapStateToProps = props.mapStateToProps || defaultMapStateToProps
 
   return {
     slice,
@@ -135,17 +152,20 @@ export default function composableRedux(props: composableReduxProps): composable
     thunks,
     getSlicedState,
     mapStateToProps: (state: RootState, ownProps: any) =>
-      // @ts-ignore
-      props.mapStateToProps({state, slice: getSlicedState(state), ownProps}),
-    mapActionToDispatches: (dispatch: AppDispatch, ownProps: any) => {
-      const dispatches = {}
+      mapStateToProps({state, slice: getSlicedState(state), ownProps}),
+    mapDispatchToProps: (dispatch: AppDispatch, ownProps: any) => {
+      const dispatches = {} as composableDispatchList
       Object.keys(actions).forEach((key) => {
-        // @ts-ignore
-        dispatches[key] = (...args) => dispatch(actions[key](...args))
+        if(dispatches[key]) {
+          throw new Error(`dispatches ${key} already exists! Please choose a different name for these reducers.`)
+        }
+        dispatches[key] = (...args : [payload: any]) => dispatch(actions[key]?.apply(null, args))
       })
       forEachThunk((thunk: composableAsyncThunkFull, type: string) => {
-        // @ts-ignore
-        dispatches[type] = (...args) => dispatch(thunks[type].async(...args))
+        if(dispatches[type]) {
+          throw new Error(`dispatches ${type} already exists! Please choose a different name for this thunk (and check if a reducer is already using it, as all must be unique).`)
+        }
+        dispatches[type] = (...args: [arg: any]) => dispatch(thunk.async?.apply(null, args))
       })
       return dispatches
     },

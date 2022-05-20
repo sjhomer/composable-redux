@@ -67,12 +67,12 @@ const state = composableRedux({
       },
     },
   },
-  mapStateToProps: ({state, slice, ownProps}: CounterMapProps) => {
-    return {
-      ...slice,
-      ...ownProps,
-    }
-  },
+  // mapStateToProps: ({state, slice, ownProps}: CounterMapProps) => {
+  //   return {
+  //     ...slice,
+  //     ...ownProps,
+  //   }
+  // },
 })
 
 export default state
