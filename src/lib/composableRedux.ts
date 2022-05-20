@@ -4,6 +4,8 @@ import {AsyncThunk, AsyncThunkOptions, AsyncThunkPayloadCreator} from '@reduxjs/
 import {AppDispatch, RootState} from '@self/app/store'
 import {Reducer} from 'redux'
 import {MapDispatchToPropsNonObject, MapStateToPropsParam} from 'react-redux/es/connect/selectorFactory'
+import {connect, ConnectedProps} from 'react-redux'
+import {ComponentType} from 'react'
 
 export interface composableAsyncThunkActions {
   load: AsyncThunkPayloadCreator<any, any, {}>
@@ -47,6 +49,7 @@ export interface mapStateToProps {
 export interface composableReduxProps {
   slice: CreateSliceOptions
   thunks?: composableAsyncThunkList
+
   mapStateToProps?(props: mapStateToProps): any
 }
 
@@ -57,6 +60,8 @@ export interface composableReduxReturn {
   thunks: composableAsyncThunkList
   mapStateToProps: MapStateToPropsParam<RootState, Object, Object>
   mapDispatchToProps: MapDispatchToPropsNonObject<any, any>
+
+  connectComponent(component: ComponentType): ConnectedProps<any>
 }
 
 interface defaultMapDispatchToProps {
@@ -79,7 +84,7 @@ export default function composableRedux(props: composableReduxProps): composable
   if (!sliceName || !props.slice?.initialState || !props.slice?.reducers) {
     throw new Error('`slice` is a required option for composableRedux')
   }
-  if(slices.includes(sliceName)) {
+  if (slices.includes(sliceName)) {
     throw new Error(`slice ${sliceName} already exists! Please choose a different name.`)
   }
   slices.push(sliceName)
@@ -142,8 +147,28 @@ export default function composableRedux(props: composableReduxProps): composable
   const getSlicedState = (state: RootState) => state[sliceName]
 
   // Assign default fallback if not provided.
-  const mapStateToProps = props.mapStateToProps || defaultMapStateToProps
+  const mapStateToProps = (state: RootState, ownProps: any) =>
+    (
+      props.mapStateToProps || defaultMapStateToProps
+    )({state, slice: getSlicedState(state), ownProps})
 
+  let mapDispatchToProps = (dispatch: AppDispatch, ownProps: any) => {
+    const dispatches = {} as composableDispatchList
+    Object.keys(actions).forEach((key) => {
+      if (dispatches[key]) {
+        throw new Error(`dispatches ${key} already exists! Please choose a different name for these reducers.`)
+      }
+      dispatches[key] = (...args: [payload: any]) => dispatch(actions[key]?.apply(null, args))
+    })
+    forEachThunk((thunk: composableAsyncThunkFull, type: string) => {
+      if (dispatches[type]) {
+        throw new Error(
+          `dispatches ${type} already exists! Please choose a different name for this thunk (and check if a reducer is already using it, as all must be unique).`)
+      }
+      dispatches[type] = (...args: [arg: any]) => dispatch(thunk.async?.apply(null, args))
+    })
+    return dispatches
+  }
   return {
     slice,
     reducer,
@@ -151,23 +176,8 @@ export default function composableRedux(props: composableReduxProps): composable
     actions,
     thunks,
     getSlicedState,
-    mapStateToProps: (state: RootState, ownProps: any) =>
-      mapStateToProps({state, slice: getSlicedState(state), ownProps}),
-    mapDispatchToProps: (dispatch: AppDispatch, ownProps: any) => {
-      const dispatches = {} as composableDispatchList
-      Object.keys(actions).forEach((key) => {
-        if(dispatches[key]) {
-          throw new Error(`dispatches ${key} already exists! Please choose a different name for these reducers.`)
-        }
-        dispatches[key] = (...args : [payload: any]) => dispatch(actions[key]?.apply(null, args))
-      })
-      forEachThunk((thunk: composableAsyncThunkFull, type: string) => {
-        if(dispatches[type]) {
-          throw new Error(`dispatches ${type} already exists! Please choose a different name for this thunk (and check if a reducer is already using it, as all must be unique).`)
-        }
-        dispatches[type] = (...args: [arg: any]) => dispatch(thunk.async?.apply(null, args))
-      })
-      return dispatches
-    },
+    mapStateToProps,
+    mapDispatchToProps,
+    connectComponent: (component) => connect(mapStateToProps, mapDispatchToProps)(component),
   }
 }

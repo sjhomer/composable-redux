@@ -1,5 +1,4 @@
-import React from 'react'
-import {connect, ConnectedProps} from 'react-redux'
+import React, {ComponentType} from 'react'
 import state, {CounterOwnProps, CounterProps} from './counterState'
 import useCounter from './useCounter'
 import styles from './Counter.module.css'
@@ -24,4 +23,4 @@ const Counter = (props: CounterProps) => {
   )
 }
 
-export default connect(state.mapStateToProps, state.mapDispatchToProps)(Counter) as ConnectedProps<any> as React.FC<CounterOwnProps>
+export default state.connectComponent(Counter as ComponentType) as React.FC<CounterOwnProps>

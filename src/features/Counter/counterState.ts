@@ -19,9 +19,13 @@ export interface CounterMapProps {
 
 export interface CounterDispatches {
   increment(): void
+
   decrement(): void
+
   incrementByAmount(amount: string | undefined): void
+
   incrementAsync(amount: string | undefined): void
+
   // incrementIfOdd(): void
 }
 
