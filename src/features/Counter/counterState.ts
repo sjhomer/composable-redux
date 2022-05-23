@@ -1,9 +1,10 @@
 import {composableRedux} from '@self/lib'
-import {PayloadAction} from '@reduxjs/toolkit'
+import {AnyAction, PayloadAction} from '@reduxjs/toolkit'
 import {fetchCount} from '@self/lib/mockApi'
 import {RootState} from '@self/app/store'
+import {composableReduxInitialState, composableReduxReturn} from '@self/lib/composableRedux'
 
-export interface CounterState {
+export interface CounterState extends composableReduxInitialState{
   value: number
 }
 
@@ -17,17 +18,20 @@ export interface CounterMapProps {
   ownProps: CounterOwnProps
 }
 
-export interface CounterDispatches {
-  increment(): void
+export interface CounterActions {
+  increment(): AnyAction
 
-  decrement(): void
+  decrement(): AnyAction
 
-  incrementByAmount(amount: string | undefined): void
+  incrementByAmount(amount: string | undefined): AnyAction
+}
 
+export interface CounterThunks {
   incrementAsync(amount: string | undefined): void
-
   // incrementIfOdd(): void
 }
+
+export type CounterDispatches = CounterActions & CounterThunks
 
 export type CounterProps = CounterState & CounterOwnProps & CounterDispatches
 
@@ -79,4 +83,6 @@ const state = composableRedux({
   // },
 })
 
-export default state
+export default state as composableReduxReturn & {
+  actions: CounterActions
+}

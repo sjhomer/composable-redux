@@ -40,6 +40,10 @@ export enum composableAsyncThunkStatus {
   failure = 'failure',
 }
 
+export interface composableReduxInitialState {
+  _thunkStatus: composableAsyncThunkStatus,
+}
+
 export interface mapStateToProps {
   state: RootState
   slice: any
