@@ -24,6 +24,7 @@ export interface composableAsyncThunk {
 
 export interface composableAsyncThunkFull extends composableAsyncThunk {
   async: AsyncThunk<any, any, {}>
+  sliceName: string
 }
 
 export interface composableAsyncThunkList {
@@ -34,14 +35,18 @@ export interface composableDispatchList {
   [name: `${string}`]: Function
 }
 
-export enum composableAsyncThunkStatus {
-  idle = 'idle',
-  pending = 'pending',
-  failure = 'failure',
+export interface composableAsyncThunkState {
+  isLoading: boolean
+  isIdle: boolean
+  hasError: boolean
+}
+
+export interface composableAsyncThunkStatuses {
+  [name: `${string}`]: composableAsyncThunkState,
 }
 
 export interface composableReduxInitialState {
-  _thunkStatus: composableAsyncThunkStatus,
+  thunks?: composableAsyncThunkStatuses
 }
 
 export interface mapStateToProps {
@@ -91,7 +96,14 @@ export default function composableRedux(props: composableReduxProps): composable
   if (slices.includes(sliceName)) {
     throw new Error(`slice ${sliceName} already exists! Please choose a different name.`)
   }
+  // Store slice name for validation checks later.
   slices.push(sliceName)
+
+  // Abstract out initial state, so we can add possible thunk status states.
+  const initialState = {
+    ...props.slice.initialState,
+    thunks: {}
+  }
 
   // Ready helpers for thunk building
   const thunks = props.thunks || {}
@@ -116,14 +128,18 @@ export default function composableRedux(props: composableReduxProps): composable
       load,
       options,
     )
+
+    // Also, build initial status state for this thunk.
+    initialState.thunks[type] = {
+      isLoading: false,
+      isIdle: true,
+      hasError: false,
+    }
   })
 
   const slice = createSlice({
     ...props.slice,
-    initialState: {
-      ...props.slice.initialState,
-      _thunkStatus: composableAsyncThunkStatus.idle,
-    },
+    initialState,
     extraReducers: (builder) => {
       // @ts-ignore
       props.slice?.extraReducers?.(builder)
@@ -133,15 +149,21 @@ export default function composableRedux(props: composableReduxProps): composable
         // Add cases for this thunk.
         builder
           .addCase(asyncThunk.pending, (state) => {
-            state._thunkStatus = composableAsyncThunkStatus.pending
+            state.thunks[type].isLoading = true
+            state.thunks[type].isIdle = false
+            state.thunks[type].hasError = false
             onLoad?.(state)
           })
           .addCase(asyncThunk.fulfilled, (state, action) => {
-            state._thunkStatus = composableAsyncThunkStatus.idle
+            state.thunks[type].isLoading = false
+            state.thunks[type].isIdle = true
+            state.thunks[type].hasError = false
             onSuccess?.(state, action)
           })
           .addCase(asyncThunk.rejected, (state) => {
-            state._thunkStatus = composableAsyncThunkStatus.failure
+            state.thunks[type].isLoading = false
+            state.thunks[type].isIdle = false
+            state.thunks[type].hasError = true
             onError?.(state)
           })
       })

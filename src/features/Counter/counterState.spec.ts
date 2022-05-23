@@ -1,16 +1,21 @@
 import state, {CounterState} from './counterState'
-import {composableAsyncThunkStatus} from '@self/lib/composableRedux'
 
 const {actions, reducer} = state
 describe('comp reducer', () => {
   const initialState: CounterState = {
     value: 3,
-    _thunkStatus: composableAsyncThunkStatus.idle,
+    thunks: {
+      incrementAsync: {
+        isLoading: false,
+        isIdle: true,
+        hasError: false,
+      }
+    }
   }
   it('should handle initial state', () => {
     expect(reducer(undefined, {type: 'unknown'})).toEqual({
+      ...initialState,
       value: 0,
-      _thunkStatus: composableAsyncThunkStatus.idle,
     })
   })
 

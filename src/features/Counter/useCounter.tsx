@@ -5,7 +5,7 @@ import {CounterProps} from './counterState'
 
 export default function useCounter(props: CounterProps) {
   // State from connect
-  const {value, initialValue} = props
+  const {value, initialValue, thunks} = props
   // Dispatches from connect
   const {decrement, increment, incrementAsync, incrementByAmount} = props
   const displayValue = <span className={styles.value}>{value}</span>
@@ -17,6 +17,7 @@ export default function useCounter(props: CounterProps) {
       className={styles.button}
       aria-label="Decrement value"
       onClick={() => decrement()}
+      disabled={thunks?.incrementAsync?.isLoading}
     >
       -
     </button>,
@@ -24,24 +25,28 @@ export default function useCounter(props: CounterProps) {
       className={styles.button}
       aria-label="Increment value"
       onClick={() => increment()}
+      disabled={thunks?.incrementAsync?.isLoading}
     >
       +
     </button>,
     incrementByAmount: <button
       className={styles.button}
       onClick={() => incrementByAmount(input.value)}
+      disabled={thunks?.incrementAsync?.isLoading}
     >
       Add Amount
     </button>,
     incrementAsync: <button
       className={styles.asyncButton}
       onClick={() => incrementAsync(input.value)}
+      disabled={thunks?.incrementAsync?.isLoading}
     >
       Add Async
     </button>,
     // incrementIfOdd: <button
     //   className={styles.button}
     //   onClick={() => incrementIfOdd(input.value)}
+    //   disabled={thunks?.incrementAsync?.isLoading}
     // >
     //   Add If Odd
     // </button>,

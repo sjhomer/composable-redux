@@ -46,6 +46,11 @@
   background-color: rgba(112, 76, 182, 0.2);
 }
 
+.button[disaled] {
+  opacity: 0.3 !important;
+  cursor: default;
+}
+
 .asyncButton {
   composes: button;
   position: relative;

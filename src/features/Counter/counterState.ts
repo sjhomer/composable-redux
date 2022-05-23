@@ -4,9 +4,9 @@ import {fetchCount} from '@self/lib/mockApi'
 import {RootState} from '@self/app/store'
 import {composableReduxInitialState, composableReduxReturn} from '@self/lib/composableRedux'
 
-export interface CounterState extends composableReduxInitialState{
+export type CounterState = {
   value: number
-}
+} & composableReduxInitialState
 
 export interface CounterOwnProps {
   initialValue?: number
