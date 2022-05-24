@@ -8,7 +8,7 @@ import {connect, ConnectedProps} from 'react-redux'
 import {ComponentType} from 'react'
 
 export interface composableAsyncThunkActions {
-  load: AsyncThunkPayloadCreator<any, any, {}>
+  trigger: AsyncThunkPayloadCreator<any, any, {}>
 
   onLoad?(state: any): void
 
@@ -69,8 +69,8 @@ export interface composableReduxReturn {
   thunks: composableAsyncThunkList
   mapStateToProps: MapStateToPropsParam<RootState, Object, Object>
   mapDispatchToProps: MapDispatchToPropsNonObject<any, any>
-
-  connectComponent(component: ComponentType): ConnectedProps<any>
+  getSlicedState(state: RootState): any
+  connect(component: ComponentType): ConnectedProps<any>
 }
 
 interface defaultMapDispatchToProps {
@@ -121,11 +121,11 @@ export default function composableRedux(props: composableReduxProps): composable
 
   // Firstly, we need to create thunks. This will be needed to generate status checks in the extraReducers callback.
   forEachThunk((thunk: composableAsyncThunkFull, type: string) => {
-    const {actions: {load}, options} = thunk
+    const {actions: {trigger}, options} = thunk
     thunk.async = createAsyncThunk(
       `${sliceName}/${type}`,
       // @ts-ignore
-      load,
+      trigger,
       options,
     )
 
@@ -138,8 +138,14 @@ export default function composableRedux(props: composableReduxProps): composable
   })
 
   const slice = createSlice({
-    ...props.slice,
+    name: sliceName,
     initialState,
+    reducers: {
+      ...props.slice.reducers,
+      resetState: (state: any) => {
+        state = initialState
+      }
+    },
     extraReducers: (builder) => {
       // @ts-ignore
       props.slice?.extraReducers?.(builder)
@@ -204,6 +210,6 @@ export default function composableRedux(props: composableReduxProps): composable
     getSlicedState,
     mapStateToProps,
     mapDispatchToProps,
-    connectComponent: (component) => connect(mapStateToProps, mapDispatchToProps)(component),
+    connect: (component) => connect(mapStateToProps, mapDispatchToProps)(component),
   }
 }

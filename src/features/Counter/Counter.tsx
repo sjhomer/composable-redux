@@ -23,4 +23,4 @@ const Counter = (props: CounterProps) => {
   )
 }
 
-export default state.connectComponent(Counter as ComponentType) as React.FC<CounterOwnProps>
+export default state.connect(Counter as ComponentType) as React.FC<CounterOwnProps>

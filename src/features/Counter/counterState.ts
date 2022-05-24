@@ -60,7 +60,7 @@ const state = composableRedux({
   thunks: {
     incrementAsync: {
       actions: {
-        load: async (amount: number) => {
+        trigger: async (amount: number) => {
           const response = await fetchCount(amount)
           // The value we return becomes the `fulfilled` action payload
           return response.data
