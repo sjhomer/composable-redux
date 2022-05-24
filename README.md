@@ -11,7 +11,7 @@ npm install --save composable-redux
 ## Usage
 
 ```ts
-import composeRedux from 'composable-redux';
+import composableRedux from 'composable-redux';
 
 const state = composableRedux({
   slice: {
