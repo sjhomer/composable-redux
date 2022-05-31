@@ -1,7 +1,7 @@
 import React from 'react'
 import logo from './logo.svg'
 import './App.css'
-import Counter from '@self/features/Counter/Counter'
+import Counter from '@self/features/Counter'
 
 function App() {
   return (

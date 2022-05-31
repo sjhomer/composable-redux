@@ -3,14 +3,11 @@ import TextInput from '../form/input/TextInput'
 import styles from './Counter.module.css'
 import {CounterProps} from './counterState'
 
-export default function useCounter({state, dispatches, ...ownProps}: CounterProps) {
+export default function useCounter(props: CounterProps) {
   // State from connect
-  const {value, thunks} = state
-  // Onw props
-  const {initialValue} = ownProps
+  const {value, initialValue, thunks} = props
   // Dispatches from connect
-  const {decrement, increment, incrementAsync, incrementByAmount} = dispatches
-  // Local state
+  const {decrement, increment, incrementAsync, incrementByAmount} = props
   const displayValue = <span className={styles.value}>{value}</span>
 
   const input = TextInput({initialValue: value || initialValue, ariaLabel: 'Set increment amount'})
@@ -20,7 +17,7 @@ export default function useCounter({state, dispatches, ...ownProps}: CounterProp
       className={styles.button}
       aria-label="Decrement value"
       onClick={() => decrement()}
-      disabled={thunks.incrementAsync.isLoading}
+      disabled={thunks?.incrementAsync?.isLoading}
     >
       -
     </button>,
@@ -28,21 +25,21 @@ export default function useCounter({state, dispatches, ...ownProps}: CounterProp
       className={styles.button}
       aria-label="Increment value"
       onClick={() => increment()}
-      disabled={thunks.incrementAsync.isLoading}
+      disabled={thunks?.incrementAsync?.isLoading}
     >
       +
     </button>,
     incrementByAmount: <button
       className={styles.button}
       onClick={() => incrementByAmount(input.value)}
-      disabled={thunks.incrementAsync.isLoading}
+      disabled={thunks?.incrementAsync?.isLoading}
     >
       Add Amount
     </button>,
     incrementAsync: <button
       className={styles.asyncButton}
       onClick={() => incrementAsync(input.value)}
-      disabled={thunks.incrementAsync.isLoading}
+      disabled={thunks?.incrementAsync?.isLoading}
     >
       Add Async
     </button>,

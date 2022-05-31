@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {ComponentType} from 'react'
 import state, {CounterOwnProps, CounterProps} from './counterState'
 import useCounter from './useCounter'
 import styles from './Counter.module.css'
@@ -23,5 +23,4 @@ const Counter = (props: CounterProps) => {
   )
 }
 
-export default state.connect(Counter) as React.FC<CounterOwnProps>
-// export default state.connect<CounterOwnProps>(Counter)
+export default state.connect(Counter as ComponentType) as React.FC<CounterOwnProps>

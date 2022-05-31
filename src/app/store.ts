@@ -7,7 +7,9 @@ export const store = configureStore({
   },
 })
 
+// @ts-ignore
 export type AppDispatch = typeof store.dispatch;
+// @ts-ignore
 export type RootState = ReturnType<typeof store.getState>;
 export type AppThunk<ReturnType = void> = ThunkAction<ReturnType,
   RootState,

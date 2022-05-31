@@ -93,9 +93,9 @@ In the above example, we're creating a slice, passing our initial state and redu
 * A `connect` from react-redux is created, which will help to inject state and dispatches automatically into a component wishing to consume state from the slice. This could be used on a single component, or many depending on how you wish to use it in your application. This performance updates the component based on associated state changes, or custom props passed in. By default this injects `mapStateToProps` and `mapDispatchToProps` methods to support the redux connect control flow.
 
 ```ts
-const myCounter = ({dispatches, customerProp, otherProps, ...state})=> {
+const myCounter = ({state, dispatches, ...ownProps})=> {
    return (
-     <div className={`${customerProp} ${otherProps}`}>
+     <div className={`${ownProps.customerProp} ${ownProps.otherProps}`}>
        <h1>Value is: {state.value}</h1>
        <button onClick={()=>dispatches.increment()}>Increment</button>
        <button onClick={()=>dispatches.decrement()}>Decrement</button>
@@ -163,7 +163,7 @@ const state = composableRedux({
 As with the slice reducers, thunks are automatically generated into the common dispatches, and some helper status flags unique to each thunk can help flow when connected to components as such:
 
 ```ts
-const myCounter = ({dispatches, ...state})=> {
+const myCounter = ({state, dispatches, ...ownProps})=> {
   const input = useInput()
    return (
      <div>

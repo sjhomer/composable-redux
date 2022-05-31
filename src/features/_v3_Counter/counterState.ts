@@ -1,24 +1,21 @@
 import {composableRedux} from '@self/lib'
 import {AnyAction, PayloadAction} from '@reduxjs/toolkit'
 import {fetchCount} from '@self/lib/mockApi'
-import type {AppDispatch, RootState} from '@self/app/store'
-import {composableAsyncThunkState, composableReduxInitialState} from '@self/lib/composableRedux'
-
-export interface CounterThunks {
-  incrementAsync: composableAsyncThunkState
-}
-
-export interface CounterThunkDispatches {
-  incrementAsync(amount: string | undefined): void
-}
+import {RootState} from '@self/app/store'
+import {composableReduxInitialState} from '@self/lib/composableRedux'
 
 export type CounterState = {
   value: number
-  thunks?: CounterThunks
-}
+} & composableReduxInitialState
 
 export interface CounterOwnProps {
   initialValue?: number
+}
+
+export interface CounterMapProps {
+  state: RootState
+  slice: CounterState
+  ownProps: CounterOwnProps
 }
 
 export interface CounterActions {
@@ -29,25 +26,29 @@ export interface CounterActions {
   incrementByAmount(amount: string | undefined): AnyAction
 }
 
-export type CounterProps = {
-  state: CounterState & composableReduxInitialState
-  dispatches: CounterActions & CounterThunkDispatches
-} & CounterOwnProps
+export interface CounterThunks {
+  incrementAsync(amount: string | undefined): void
+  // incrementIfOdd(): void
+}
 
-const state = composableRedux<RootState, AppDispatch, CounterState>({
+export type CounterDispatches = CounterActions & CounterThunks
+
+export type CounterProps = CounterState & CounterOwnProps & CounterDispatches
+
+const state = composableRedux({
   slice: {
     name: 'counter',
     initialState: {
       value: 0,
-    },
+    } as CounterState,
     reducers: {
-      increment: (state) => {
+      increment: (state: CounterState) => {
         state.value++
       },
-      decrement: (state) => {
+      decrement: (state: CounterState) => {
         state.value--
       },
-      incrementByAmount: (state, action: PayloadAction<string>) => {
+      incrementByAmount: (state: CounterState, action: PayloadAction<string>) => {
         const value = parseInt(action.payload)
         // Only increment if the value is an int
         if (Number.isInteger(value)) {
@@ -74,6 +75,15 @@ const state = composableRedux<RootState, AppDispatch, CounterState>({
       },
     },
   },
+  // mapStateToProps: ({state, slice, ownProps}: CounterMapProps) => {
+  //   return {
+  //     ...slice,
+  //     ...ownProps,
+  //   }
+  // },
 })
 
 export default state
+// as composableReduxReturn & {
+//   actions: CounterActions
+// }
